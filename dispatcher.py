@@ -2,7 +2,7 @@ import argparse
 import os
 import re
 import socket
-import SocketServer
+import socketserver
 import time
 import threading
 
@@ -21,13 +21,13 @@ def dispatch_tests(server, commit_id):
                 return
         time.sleep(2)
 
-class ThreadingTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     runners = [] # Keeps track of test runner pool
     dead = False # Indicate to other threads that we are no longer running
     dispatched_commits = {} # Keeps track of commits we dispatched
     pending_commits = [] # Keeps track of commits we have yet to dispatch
 
-class DispatcherHandler(SocketServer.BaseRequestHandler):
+class DispatcherHandler(socketserver.BaseRequestHandler):
     """
     RequestHandler class for our dispatcher
     Dispatches test runners against incoming 
