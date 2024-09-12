@@ -123,8 +123,6 @@ def serve():
                 time.sleep(5)
 
 
-
-
     runner_heartbeat = threading.Thread(target=runner_checker, args=(server,))
     redistributor = threading.Thread(target=redistribute, args=(server,))
     try:
@@ -137,3 +135,6 @@ def serve():
         server.dead = True
         runner_heartbeat.join()
         redistributor.join()
+
+if __name__ == "__main__":
+    serve()
