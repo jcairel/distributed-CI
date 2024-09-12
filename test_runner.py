@@ -13,7 +13,7 @@ import helpers
 
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     dispatcher_server = None # Holds dispatcher server host/port information
-    last_communication = None # Keep track of last communication from dispatcher
+    last_communication = 0 # Keep track of last communication from dispatcher
     busy = False # Status flag
     dead = False # Status flag
 
@@ -23,29 +23,29 @@ class TestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(1024).strip()
+        self.data = self.request.recv(1024).decode('utf-8')
         command_groups = self.command_re.match(self.data)
         command = command_groups.group(1)
         if not command:
-            self.request.sendall("Invalid command")
+            self.request.sendall(b"Invalid command")
             return
         if command == "ping":
             print("pinged")
             self.server.last_communication = time.time()
-            self.request.sendall("pong")
+            self.request.sendall(b"pong")
         elif command == "runtest":
             print("got runtest command: am I busy? %s" % self.server.busy)
             if self.server.busy:
-                self.request.sendall("BUSY")
+                self.request.sendall(b"BUSY")
             else:
-                self.request.sendall("OK")
+                self.request.sendall(b"OK")
                 print("running")
                 commit_id = command_groups.group(2)[1:]
                 self.server.busy = True
                 self.run_tests(commit_id, self.server.repo_folder)
                 self.server.busy = False
         else:
-            self.request.sendall("Invalid command")
+            self.request.sendall(b"Invalid command")
 
     def run_tests(self, commit_id, repo_folder):
         # update repo
@@ -109,6 +109,8 @@ def serve():
     response = helpers.communicate(server.dispatcher_server["host"],
                                    int(server.dispatcher_server["port"]),
                                    "register:%s:%s" % (runner_host, runner_port))
+    response = response.decode('utf-8')
+    print(response)
     if response != "OK":
         raise Exception("Can't register with dispatcher")
     
@@ -120,6 +122,7 @@ def serve():
                 try:
                     response = helpers.communicate(server.dispatcher_server["host"],
                                                 int(server.dispatcher_server["port"]), "status")
+                    response = response.decode('utf-8')
                     if response != "OK":
                         print("Dispatcher is no longer functional")
                         server.shutdown()

@@ -36,15 +36,17 @@ class DispatcherHandler(socketserver.BaseRequestHandler):
     command_re = re.compile(r"(\w+)(:.+)*")
     BUF_SIZE = 1024
     def handle(self):
-        self.data = self.request.recv(self.BUF_SIZE).strip()
-        command_groups = self.command_re.match(self.data)
+        data = self.request.recv(self.BUF_SIZE).decode('utf-8')
+        print(data)
+        command_groups = self.command_re.match((data))
         if not command_groups:
-            self.request.sendall("Invalid command")
+            self.request.sendall(b"Invalid command")
             return
         command = command_groups.group(1)
+        print(command)
         if command == "status":
             print("in status")
-            self.request.sendall("OK")
+            self.request.sendall(b"OK")
         elif command == "register":
             # Add test runner to pool
             print("register")
@@ -52,14 +54,14 @@ class DispatcherHandler(socketserver.BaseRequestHandler):
             host, port = re.findall(r":(\w*)", address)
             runner = {"host": host, "port": port}
             self.server.runners.append(runner)
-            self.request.sendall("OK")
+            self.request.sendall(b"OK")
         elif command == "dispatch":
             print("going to dispatch")
             commit_id = command_groups.group(2)[1:]
             if not self.server.runners:
-                self.request.sendall("No runners are registered")
+                self.request.sendall(b"No runners are registered")
             else:
-                self.request.sendall("OK")
+                self.request.sendall(b"OK")
                 dispatch_tests(self.server, commit_id)
         elif command == "results":
             print("got test results")
@@ -79,7 +81,7 @@ class DispatcherHandler(socketserver.BaseRequestHandler):
                 data = self.data.split(":")[3:]
                 data = "\n".join(data)
                 f.write(data)
-            self.request.sendall("OK")
+            self.request.sendall(b"OK")
 
 def serve():
     parser = argparse.ArgumentParser()
@@ -95,7 +97,7 @@ def serve():
     def runner_checker(server):
         # Check on runners and remove unresponsive ones
         def manage_commit_lists(runner):
-            for commit, assigned_runner in server.dispatched_commits.iteritems():
+            for commit, assigned_runner in server.dispatched_commits.items():
                 if assigned_runner == runner:
                     del server.dispatched_commits[commit]
                     server.pending_commits.append(commit)
