@@ -119,7 +119,7 @@ def serve():
             if (time.time() - server.last_communication) > 10:
                 try:
                     response = helpers.communicate(server.dispatcher_server["host"],
-                                                int(dispatcher_server["port"]), "status")
+                                                int(server.dispatcher_server["port"]), "status")
                     if response != "OK":
                         print("Dispatcher is no longer functional")
                         server.shutdown()
