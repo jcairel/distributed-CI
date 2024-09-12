@@ -32,6 +32,7 @@ def poll():
             # There is a change, first check status of dispatcher server
             try:
                 response = helpers.communicate(dispatcher_host, int(dispatcher_port), "status")
+                response = response.decode('utf-8')
             except socket.error as e:
                 raise Exception("Could not communicate with dispatcher server: %s" % e)
 
@@ -41,6 +42,7 @@ def poll():
                 with open(".commit_id", "r") as f:
                     commit = f.readline()
                 response = helpers.communicate(dispatcher_host, int(dispatcher_port), "dispatch:%s" % commit)
+                response = response.decode('utf-8')
                 if response != "OK":
                     raise Exception("Could not dispatch the test: %s" % response)
                 print("dispatched!")
